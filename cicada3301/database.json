@@ -1,0 +1,112 @@
+[
+  {
+    "id": 1788529040101,
+    "username": "stephenroxy",
+    "text": "hi this is me roxy how are u doing all the work",
+    "image": null,
+    "time": "7:07:20 pm"
+  },
+  {
+    "id": 1788529244861,
+    "username": "lolo",
+    "text": "hi this is me chutiya",
+    "image": null,
+    "time": "7:10:44 pm"
+  },
+  {
+    "id": 1788529257948,
+    "username": "stephenroxy",
+    "text": "kaise ho tum",
+    "image": null,
+    "time": "7:10:57 pm"
+  },
+  {
+    "id": 1788529414905,
+    "username": "3301",
+    "text": "hi this is me roxy how are you",
+    "image": "/uploads/1788529414822.png",
+    "time": "7:13:34 pm"
+  },
+  {
+    "id": 1788529426107,
+    "username": "Anonymous",
+    "text": "im good",
+    "image": null,
+    "time": "7:13:46 pm"
+  },
+  {
+    "id": 1788529439653,
+    "username": "3301",
+    "text": "ok welcome to the group",
+    "image": null,
+    "time": "7:13:59 pm"
+  },
+  {
+    "id": 1788529613677,
+    "username": "stephenroxy",
+    "text": "hi",
+    "image": null,
+    "time": "7:16:53 pm"
+  },
+  {
+    "id": 1788529909243,
+    "username": "Anonymous",
+    "text": "hhihiihihiih",
+    "image": null,
+    "time": "7:21:49 pm"
+  },
+  {
+    "id": 1788530410163,
+    "username": "Ipad ",
+    "text": "Hi this is a test message",
+    "image": null,
+    "time": "7:30:10 pm"
+  },
+  {
+    "id": 1788530456460,
+    "username": "Anonymous",
+    "text": "this is send from the pc",
+    "image": null,
+    "time": "7:30:56 pm"
+  },
+  {
+    "id": "msg-1788532537915-225",
+    "username": "NEO-707",
+    "avatarSeed": "NEO-707-1788532509602",
+    "text": "ok i think now its working boys",
+    "image": null,
+    "isClassified": false,
+    "replyTo": null,
+    "time": "08:05 pm"
+  },
+  {
+    "id": "msg-1788532549535-110",
+    "username": "NEO-707",
+    "avatarSeed": "NEO-707-1788532509602",
+    "text": "lets go boys",
+    "image": null,
+    "isClassified": false,
+    "replyTo": null,
+    "time": "08:05 pm"
+  },
+  {
+    "id": "msg-1788532839657-535",
+    "username": "NULL_PTR-396",
+    "avatarSeed": "NULL_PTR-396-1788532817166",
+    "text": "so every chat is being saved here right?",
+    "image": null,
+    "isClassified": false,
+    "replyTo": null,
+    "time": "08:10 pm"
+  },
+  {
+    "id": "msg-1788532965620-434",
+    "username": "NULL_PTR-396",
+    "avatarSeed": "NULL_PTR-396-1788532817166",
+    "text": "this is sent from pc",
+    "image": null,
+    "isClassified": false,
+    "replyTo": null,
+    "time": "08:12 pm"
+  }
+]

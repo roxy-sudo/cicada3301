@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Cicada 3301</title>
+    <style>
+        body { background-color: #111; color: #ff0000; font-family: monospace; padding: 20px; }
+        input, button { background: #000; color: #ff0000; border: 1px solid #ff0000; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ff0000; padding: 10px; text-align: left; }
+        img { max-width: 100px; }
+    </style>
+</head>
+<body>
+    <h1>[ ADMIN OVERRIDE ]</h1>
+    
+    <div id="login-section">
+        <input type="password" id="password" placeholder="Enter Passcode">
+        <button onclick="login()">DECRYPT</button>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <h2>MASTER DATA LOG</h2>
+        <table id="data-table">
+            <tr>
+                <th>Timestamp</th>
+                <th>Username</th>
+                <th>Message</th>
+                <th>Image File</th>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        async function login() {
+            const password = document.getElementById('password').value;
+            const res = await fetch('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                
+                const table = document.getElementById('data-table');
+                result.data.forEach(msg => {
+                    const safeText = msg.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${msg.time}</td>
+                        <td>${msg.username}</td>
+                        <td>${safeText}</td>
+                        <td>${msg.image ? `<img src="${msg.image}">` : 'None'}</td>
+                    `;
+                    table.appendChild(tr);
+                });
+            } else {
+                alert('ACCESS DENIED');
+            }
+        }
+    </script>
+</body>
+</html>

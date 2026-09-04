@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CICADA 3301 // SECURE RELAY</title>
+    <style>
+        :root {
+            --bg-base: #08090c;
+            --bg-surface: #10131a;
+            --bg-elevated: #181d28;
+            --accent: #00ffaa;
+            --accent-glow: rgba(0, 255, 170, 0.25);
+            --cyan: #00e5ff;
+            --danger: #ff3366;
+            --text-primary: #e6edf3;
+            --text-muted: #8b949e;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(0, 255, 170, 0.4);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: "SF Mono", Consolas, "Fira Code", monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Header */
+        header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .brand-title {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+        }
+
+        /* Identity Badge */
+        .identity-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-elevated);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .identity-card:hover { border-color: var(--accent); }
+
+        .avatar-box {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border: 1px solid var(--accent);
+        }
+
+        .codename-label {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Chat Stream */
+        #chat-stream {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        .message-row {
+            display: flex;
+            gap: 10px;
+            max-width: 85%;
+            animation: slideUp 0.18s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-row.mine {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .msg-bubble {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 10px 14px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .mine .msg-bubble {
+            background: #11201d;
+            border-color: rgba(0, 255, 170, 0.25);
+        }
+
+        .msg-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .msg-sender {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .mine .msg-sender { color: var(--accent); }
+
+        .msg-time {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        /* Reply Quote Box inside Message */
+        .quoted-box {
+            background: rgba(0, 0, 0, 0.35);
+            border-left: 3px solid var(--cyan);
+            border-radius: 4px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .quoted-author {
+            color: var(--cyan);
+            font-weight: 600;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+        }
+
+        /* Content & Code styling */
+        .msg-body {
+            font-size: 0.92rem;
+            line-height: 1.45;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        pre {
+            background: #040508;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+
+        code:not(pre code) {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--cyan);
+        }
+
+        /* Classified / Blurred Media */
+        .media-container {
+            position: relative;
+            margin-top: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        .media-container img {
+            max-width: 100%;
+            max-height: 380px;
+            display: block;
+            border-radius: 8px;
+            transition: filter 0.3s ease;
+        }
+
+        .media-container.classified img {
+            filter: blur(28px);
+            cursor: pointer;
+        }
+
+        .classified-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 12, 16, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.2s;
+        }
+
+        .classified-overlay span {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--danger);
+            letter-spacing: 1px;
+        }
+
+        /* Message Action Buttons */
+        .msg-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            color: var(--accent);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .receipt-check {
+            font-size: 0.75rem;
+            color: var(--accent);
+            letter-spacing: -2px;
+            margin-left: 2px;
+        }
+
+        /* Typing Banner */
+        #typing-indicator {
+            padding: 4px 18px;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--cyan);
+            min-height: 20px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        #typing-indicator.visible { opacity: 1; }
+
+        /* Input Deck */
+        #input-deck {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-subtle);
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Active Reply Strip */
+        #reply-preview {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-elevated);
+            border-left: 3px solid var(--cyan);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        #reply-preview.active { display: flex; }
+
+        .reply-preview-text {
+            color: var(--text-muted);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            max-width: 80%;
+        }
+
+        .cancel-reply-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        textarea {
+            flex: 1;
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            resize: none;
+            height: 44px;
+            max-height: 120px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus { border-color: var(--accent); }
+
+        .icon-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--border-active);
+        }
+
+        .icon-btn.active {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: rgba(255, 51, 102, 0.1);
+        }
+
+        .send-btn {
+            background: var(--accent);
+            border: none;
+            color: #040508;
+            font-weight: 700;
+            padding: 0 18px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            box-shadow: 0 0 14px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        #file-input { display: none; }
+        
+        #file-indicator {
+            display: none;
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            padding: 0 4px;
+        }
+        #file-indicator.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="status-dot"></div>
+            <div class="brand-title">CICADA // 3301</div>
+        </div>
+        <div class="identity-card" onclick="cycleCodename()" title="Tap to generate new identity">
+            <div class="avatar-box" id="my-avatar"></div>
+            <div class="codename-label" id="my-codename">...</div>
+        </div>
+    </header>
+
+    <div id="chat-stream"></div>
+
+    <div id="typing-indicator"></div>
+
+    <div id="input-deck">
+        <div id="reply-preview">
+            <div class="reply-preview-text" id="reply-target-text">Replying to...</div>
+            <button class="cancel-reply-btn" onclick="cancelReply()">✕</button>
+        </div>
+        <div id="file-indicator">📸 Attached: <span id="file-name"></span></div>
+        <div class="input-row">
+            <input type="file" id="file-input" accept="image/*">
+            <button class="icon-btn" onclick="document.getElementById('file-input').click()" title="Attach Image">📎</button>
+            <button class="icon-btn" id="classified-toggle" onclick="toggleClassified()" title="Toggle Classified Mask">🔒</button>
+            <textarea id="msg-input" placeholder="Transmit telemetry or `code`... (Shift+Enter for newline)"></textarea>
+            <button class="send-btn" onclick="sendTransmission()">SEND</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // --- Identity Engine (Deterministic Cryptographic SVG Avatar) ---
+        const CODENAMES = [
+            "SPECTRE", "CIPHER", "PHANTOM", "ORACLE", "ARCHON", 
+            "ENIGMA", "NULL_PTR", "VALKYRIE", "NEO", "PARADOX"
+        ];
+        
+        let myName = localStorage.getItem('cicada_name');
+        let mySeed = localStorage.getItem('cicada_seed');
+
+        function generateIdenticon(seed) {
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+            const hue = Math.abs(hash % 360);
+            const color = `hsl(${hue}, 80%, 55%)`;
+            
+            // Build 5x5 symmetric matrix
+            let rects = '';
+            for (let x = 0; x < 3; x++) {
+                for (let y = 0; y < 5; y++) {
+                    if ((Math.sin(hash + x * 5 + y) > 0.1)) {
+                        rects += `<rect x="${x * 6 + 3}" y="${y * 6 + 3}" width="5" height="5" fill="${color}" />`;
+                        if (x < 2) {
+                            rects += `<rect x="${(4 - x) * 6 + 3}" y="${y * 6 + 3}" width="5" height="5" fill="${color}" />`;
+                        }
+                    }
+                }
+            }
+            return `<svg viewBox="0 0 36 36" width="26" height="26">${rects}</svg>`;
+        }
+
+        function cycleCodename() {
+            const randName = CODENAMES[Math.floor(Math.random() * CODENAMES.length)];
+            const randNum = Math.floor(100 + Math.random() * 900);
+            myName = `${randName}-${randNum}`;
+            mySeed = myName + '-' + Date.now();
+            localStorage.setItem('cicada_name', myName);
+            localStorage.setItem('cicada_seed', mySeed);
+            updateIdentityUI();
+        }
+
+        function updateIdentityUI() {
+            document.getElementById('my-codename').innerText = myName;
+            document.getElementById('my-avatar').innerHTML = generateIdenticon(mySeed);
+        }
+
+        if (!myName) cycleCodename();
+        else updateIdentityUI();
+
+        // --- Socket & Networking ---
+        const socket = io({
+            extraHeaders: { "Bypass-Tunnel-Reminder": "true" }
+        });
+
+        const chatStream = document.getElementById('chat-stream');
+        const msgInput = document.getElementById('msg-input');
+        const fileInput = document.getElementById('file-input');
+        const classifiedBtn = document.getElementById('classified-toggle');
+        const typingBanner = document.getElementById('typing-indicator');
+
+        let isClassified = false;
+        let activeReply = null;
+        let typingTimeout = null;
+
+        function toggleClassified() {
+            isClassified = !isClassified;
+            classifiedBtn.classList.toggle('active', isClassified);
+        }
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            const ind = document.getElementById('file-indicator');
+            if (file) {
+                document.getElementById('file-name').innerText = file.name;
+                ind.classList.add('active');
+            } else {
+                ind.classList.remove('active');
+            }
+        });
+
+        // Typing event emitter
+        msgInput.addEventListener('input', () => {
+            socket.emit('typing', { username: myName, isTyping: true });
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                socket.emit('typing', { username: myName, isTyping: false });
+            }, 1200);
+        });
+
+        socket.on('userTyping', (data) => {
+            if (data.isTyping) {
+                typingBanner.innerText = `● ${data.username} is encrypting a transmission...`;
+                typingBanner.classList.add('visible');
+            } else {
+                typingBanner.classList.remove('visible');
+            }
+        });
+
+        // Parse Code and Format Text securely
+        function parseFormattedText(str) {
+            // Escape HTML
+            let safe = str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            // Format Multiline ```code```
+            safe = safe.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            
+            // Format Inline `code`
+            safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+            return safe;
+        }
+
+        function createMessageElement(data) {
+            const isMine = data.username === myName;
+            const row = document.createElement('div');
+            row.className = `message-row ${isMine ? 'mine' : ''}`;
+            row.id = data.id;
+
+            let replyHTML = '';
+            if (data.replyTo) {
+                replyHTML = `
+                    <div class="quoted-box">
+                        <div class="quoted-author">${data.replyTo.username}</div>
+                        <div>${data.replyTo.snippet}</div>
+                    </div>
+                `;
+            }
+
+            let mediaHTML = '';
+            if (data.image) {
+                if (data.isClassified) {
+                    mediaHTML = `
+                        <div class="media-container classified" onclick="revealMedia(this)">
+                            <img src="${data.image}" alt="Classified Transmission">
+                            <div class="classified-overlay">
+                                <span>🔒 CLASSIFIED // TAP TO DECRYPT</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    mediaHTML = `
+                        <div class="media-container">
+                            <img src="${data.image}" alt="Transmission">
+                        </div>
+                    `;
+                }
+            }
+
+            row.innerHTML = `
+                <div class="avatar-box" style="flex-shrink:0;">${generateIdenticon(data.avatarSeed || data.username)}</div>
+                <div class="msg-bubble">
+                    <div class="msg-meta">
+                        <span class="msg-sender">${data.username}</span>
+                        <span class="msg-time">${data.time}</span>
+                    </div>
+                    ${replyHTML}
+                    <div class="msg-body">${parseFormattedText(data.text)}</div>
+                    ${mediaHTML}
+                    <div class="msg-actions">
+                        <button class="action-btn" onclick="startReply('${data.id}', '${data.username}', '${encodeURIComponent(data.text.slice(0, 40))}')">↩ Reply</button>
+                        <span class="receipt-check">✓✓</span>
+                    </div>
+                </div>
+            `;
+            return row;
+        }
+
+        function revealMedia(container) {
+            container.classList.remove('classified');
+            const overlay = container.querySelector('.classified-overlay');
+            if (overlay) overlay.remove();
+        }
+
+        socket.on('loadHistory', (history) => {
+            chatStream.innerHTML = '';
+            history.forEach(msg => chatStream.appendChild(createMessageElement(msg)));
+            chatStream.scrollTop = chatStream.scrollHeight;
+        });
+
+        socket.on('newMessage', (msg) => {
+            chatStream.appendChild(createMessageElement(msg));
+            chatStream.scrollTop = chatStream.scrollHeight;
+        });
+
+        // --- Reply Flow ---
+        function startReply(id, username, snippetEncoded) {
+            const snippet = decodeURIComponent(snippetEncoded) || '[Attachment]';
+            activeReply = { id, username, snippet };
+            document.getElementById('reply-target-text').innerText = `Quoting ${username}: "${snippet}"`;
+            document.getElementById('reply-preview').classList.add('active');
+            msgInput.focus();
+        }
+
+        function cancelReply() {
+            activeReply = null;
+            document.getElementById('reply-preview').classList.remove('active');
+        }
+
+        // --- Transmission Delivery ---
+        async function sendTransmission() {
+            const text = msgInput.value.trim();
+            const file = fileInput.files[0];
+
+            if (!text && !file) return;
+
+            let imageUrl = null;
+            if (file) {
+                const formData = new FormData();
+                formData.append('image', file);
+                try {
+                    const res = await fetch('/upload', { method: 'POST', body: formData });
+                    const resData = await res.json();
+                    imageUrl = resData.imageUrl;
+                } catch (e) {
+                    alert('Telemetry upload failed.');
+                    return;
+                }
+            }
+
+            socket.emit('sendMessage', {
+                username: myName,
+                avatarSeed: mySeed,
+                text: text,
+                image: imageUrl,
+                isClassified: isClassified,
+                replyTo: activeReply
+            });
+
+            // Reset inputs
+            msgInput.value = '';
+            fileInput.value = '';
+            document.getElementById('file-indicator').classList.remove('active');
+            cancelReply();
+            if (isClassified) toggleClassified();
+            socket.emit('typing', { username: myName, isTyping: false });
+        }
+
+        // Keyboard bindings
+        msgInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendTransmission();
+            }
+        });
+    </script>
+</body>
+</html>
